@@ -16,8 +16,11 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Build with Maven
-        run: mvn clean package -DskipTests
+      - name: Build with Maven inside a folder
+        run: |
+          cd your-folder-name
+          mvn clean install -DskipTests
+
 
   test:
     needs: build
@@ -29,8 +32,11 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Run Tests with Maven
-        run: mvn test
+      - name: Build with Maven inside a folder
+        run: |
+          cd your-folder-name
+          mvn test
+
 
   docker:
     needs: test
