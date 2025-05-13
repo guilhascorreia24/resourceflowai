@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI/CD
 
 on:
   push:
@@ -9,8 +9,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      artifact-path: ${{ steps.save-artifact.outputs.artifact-path }}
     steps:
       - uses: actions/checkout@v3
 
@@ -20,17 +18,10 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build with Maven (skip tests)
+      - name: Build with Maven inside a folder
         run: |
           cd demo
           mvn clean install -DskipTests
-
-      - name: Save JAR as artifact
-        id: save-artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: demo-jar
-          path: demo/target/*.jar
 
   test:
     needs: build
@@ -44,7 +35,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Run tests
+      - name: Run tests with Maven inside a folder
         run: |
           cd demo
           mvn test
@@ -55,14 +46,20 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Download JAR artifact
-        uses: actions/download-artifact@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
         with:
-          name: demo-jar
-          path: demo/target/
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build with Maven inside a folder (rebuild to get target/)
+        run: |
+          cd demo
+          mvn clean install -DskipTests
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
@@ -77,6 +74,4 @@ jobs:
           context: demo
           file: demo/Dockerfile
           push: true
-          tags: |
-            ghcr.io/${{ github.repository }}/resourceflow-ai:latest
-            ghcr.io/${{ github.repository }}/resourceflow-ai:${{ github.sha }}
+          tags: ghcr.io/${{ github.repository }}/resourceflow-ai:latest
