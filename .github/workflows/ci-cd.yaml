@@ -18,7 +18,7 @@ jobs:
           distribution: 'temurin'
       - name: Build with Maven inside a folder
         run: |
-          cd demo
+          cd demo 
           mvn clean install -DskipTests
 
 
